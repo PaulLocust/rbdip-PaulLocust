@@ -1,5 +1,10 @@
 package com.rbdip.bookstore.order;
 
+import com.rbdip.bookstore.customer.Customer;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,13 +12,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Намеренно денормализованная сущность: хранит "сырые" контактные данные
- * клиента прямо в заказе вместо ссылки на отдельную таблицу customers.
- * Это цель для нормализации схемы в ЛР2, а поле customerFullName - цель
- * expand-contract миграции в ЛР3 (разбить на firstName/lastName).
- */
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -22,14 +23,13 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "customer_full_name", nullable = false)
-    private String customerFullName;
+    @ManyToOne(cascade = CascadeType.PERSIST, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-    @Column(name = "customer_address")
-    private String customerAddress;
-
-    @Column(name = "customer_phone")
-    private String customerPhone;
+    @OneToMany
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private List<OrderItem> items = new ArrayList<>();
 
     @Column(nullable = false)
     private String status;
@@ -42,9 +42,7 @@ public class Order {
     }
 
     public Order(String customerFullName, String customerAddress, String customerPhone, String status) {
-        this.customerFullName = customerFullName;
-        this.customerAddress = customerAddress;
-        this.customerPhone = customerPhone;
+        this.customer = new Customer(customerFullName, customerAddress, customerPhone);
         this.status = status;
     }
 
@@ -52,16 +50,20 @@ public class Order {
         return id;
     }
 
+    public List<OrderItem> getItems() {
+        return List.copyOf(items);
+    }
+
     public String getCustomerFullName() {
-        return customerFullName;
+        return customer.getFullName();
     }
 
     public String getCustomerAddress() {
-        return customerAddress;
+        return customer.getAddress();
     }
 
     public String getCustomerPhone() {
-        return customerPhone;
+        return customer.getPhone();
     }
 
     public String getStatus() {
