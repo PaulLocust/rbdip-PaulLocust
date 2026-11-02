@@ -18,7 +18,7 @@ public class OrderWriter {
                 request.customerFullName(), request.customerAddress(), request.customerPhone(), "new"));
         for (OrderValidator.ValidatedItem item : items) {
             orderItems.save(new OrderItem(
-                    order.getId(), item.product().getName(), item.product().getPrice(), item.quantity()));
+                    order.getId(), item.product(), item.quantity()));
         }
         return order;
     }
