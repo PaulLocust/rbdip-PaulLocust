@@ -35,6 +35,11 @@ class PricingCalculatorTest {
         "1100, 1, vip, , 990.00",
         "100, 11, wholesale, SAVE20PERCENT, 710.60",
         "100, 11, vip, SAVE10, 930.50",
+        "2000, 1, wholesale, SAVE20PERCENT, 1332.80",
+        "1250, 1, regular, SAVE20PERCENT, 1000.00",
+        "1250.01, 1, regular, SAVE20PERCENT, 980.01",
+        "1010.01, 1, regular, SAVE10, 980.01",
+        "0, 11, wholesale, SAVE20PERCENT, 0.00",
         "1.005, 1, regular, , 1.01",
         "1.004, 1, regular, , 1.00"
     })
@@ -69,5 +74,13 @@ class PricingCalculatorTest {
         assertThatThrownBy(() -> calculator.calculateOrderTotal(
                 List.of(new PricingCalculator.LineItem(null, 1)), null, null))
                 .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void clampsOnlyAfterSummingLinesAndApplyingCoupon() {
+        assertThat(calculator.calculateOrderTotal(List.of(
+                new PricingCalculator.LineItem(new BigDecimal("-5"), 1),
+                new PricingCalculator.LineItem(new BigDecimal("20"), 1)), "regular", "SAVE10"))
+                .isEqualTo(new BigDecimal("5.00"));
     }
 }
